@@ -16,6 +16,7 @@ my $gedfile;
 my $xref;
 my $ancestorcount = 0;
 my $descendantcount = 0;
+my @ignore = [];
 
 sub usage() {
 	print <<USAGE;
@@ -25,6 +26,7 @@ Usage: $0 -f <path to gedcom> -x <xref> [options]
 	-x / --xfref       : xref for an individual in the file
 	-a / --ancestors   : number of ancestor generations to graph
 	-d / --descendants : number of descendant generations to graph
+	-i / --ignore      : ignore these xrefs (individuals & families)
 	--debug            : output debugging info on STDERR
 	-h / --help        : display this message
 
@@ -40,12 +42,15 @@ GetOptions(
 	"x|xref=s" => \$xref,
 	"a|ancestors:i" => \$ancestorcount,
 	"d|descendants:i" => \$descendantcount,
+	"i|ignore:s" => \@ignore,
 	"debug" => \$DEBUG,
 	"h|help" => sub { &usage() })
 or &usage();
 
 if (!defined $gedfile) { &usage(); }
 if (!defined $xref) { &usage(); }
+
+@ignore = split(/,/,join(',',@ignore));
 
 print STDERR "% DEBUG: Looking for $xref in $gedfile...\n" if $DEBUG;
 
@@ -205,6 +210,8 @@ sub printIndividual() {
 	my $indi = shift;
 	my $indent = shift;
 	
+	return if (grep {$_ eq $indi->xref} @ignore);
+	
 	&startnode($indent++, $nodetype, "id=".$indi->xref);
 	if (defined $indi->sex) {
 		print "".("\t"x($indent)).($indi->sex eq "M" ? "male" : "female").",\n";
@@ -290,6 +297,7 @@ sub printAncestors() {
 	my $family = $indi->famc;
 	
 	return if (!defined $family);
+	return if (grep {$_ eq $family->xref} @ignore);
 	
 	my $father = $family->husband;
 	if (defined $father) {
@@ -310,6 +318,8 @@ sub printDescendants() {
 	my $depth = shift;
 	
 	foreach my $fam ($indi->fams) {
+		next if (grep {$_ eq $fam->xref} @ignore);
+		
 		my $spouse = $indi->sex eq "M" ? $fam->wife : $fam->husband;
 		
 		&startnode($indent, "union", &familyOptions($fam));

@@ -210,8 +210,6 @@ sub printIndividual() {
 	my $indi = shift;
 	my $indent = shift;
 	
-	return if (grep {$_ eq $indi->xref} @ignore);
-	
 	&startnode($indent++, $nodetype, "id=".$indi->xref);
 	if (defined $indi->sex) {
 		print "".("\t"x($indent)).($indi->sex eq "M" ? "male" : "female").",\n";
@@ -278,6 +276,8 @@ sub recurse() {
 	my $nodetype = shift;
 	my $method = shift;
 	my $options = shift;
+	
+	return if (grep {$_ eq $indi->xref} @ignore);
 	
 	if ($depth > 1) {
 		&startnode($indent, $nodetype, $options);

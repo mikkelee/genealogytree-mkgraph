@@ -319,21 +319,25 @@ sub printDescendants() {
 	my $indent = shift;
 	my $depth = shift;
 	
+	my $is_subsequent = 0;
+	
 	foreach my $fam ($indi->fams) {
 		next if (grep {$_ eq $fam->xref} @ignore);
 		
 		my $spouse = $indi->sex eq "M" ? $fam->wife : $fam->husband;
 		
-		&startnode($indent, "union", &familyOptions($fam));
+		&startnode($indent, "union", &familyOptions($fam)) if ($is_subsequent);
 		if (defined $spouse) {
-			&DEBUG($indent+1, "Spouse", $spouse);
-			&printIndividual("p", $spouse, $indent+1);
+			&DEBUG($indent+$is_subsequent, "Spouse", $spouse);
+			&printIndividual("p", $spouse, $indent+$is_subsequent);
 		}
 		foreach my $child ($fam->children) {
-			&DEBUG($indent+1, "Child", $child);
-			&recurse($child, $indent+1, $depth, "child", \&printDescendants);
+			&DEBUG($indent+$is_subsequent, "Child", $child);
+			&recurse($child, $indent+$is_subsequent, $depth, "child", \&printDescendants);
 		}
-		&endnode($indent);
+		&endnode($indent) if ($is_subsequent);
+		
+		$is_subsequent++;
 	}
 }
 

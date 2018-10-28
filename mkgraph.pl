@@ -172,7 +172,10 @@ sub processEvent() {
 	return "" if ($event eq "0");
 	return "" if ($event eq "Y");
 	# Fix for https://github.com/mikkelee/genealogytree-mkgraph/issues/1
-	return if(ref($event) ne 'Gedcom::Record');
+	if (ref($event) ne 'Gedcom::Record') {
+		print STDERR "% DEBUG: Ignoring malformed $tag event: $event\n";
+		return "";
+	}
 	return "" if (!defined $event->date);
 	
 	my $modifier = "-";

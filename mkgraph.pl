@@ -268,7 +268,7 @@ sub familyOptions() {
 	if (defined $family) {
 		$options = "id=".$family->xref;
 		
-		my $familyOptions = &processEvent("marriage", $family->marriage, 0);
+		my $familyOptions = &processEvent("marriage", $family->record('marriage'), 0);
 		if (defined $familyOptions && $familyOptions ne "") {
 			$options .= ", family database={$familyOptions}";
 		}

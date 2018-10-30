@@ -83,7 +83,7 @@ if ($ancestorcount > 0) {
 	} else {
 		print STDERR "% DEBUG: Going to make a 'parent' subgraph\n" if $DEBUG;
 		
-		&startnode($depth++, "parent");
+		&startnode($depth++, "parent", &familyOptions($proband->famc));
 		&DEBUG($depth, "Proband", $proband);
 		&printIndividual("g", $proband, $depth);
 		&printAncestors($proband, $depth--, $ancestorcount);
@@ -92,7 +92,7 @@ if ($ancestorcount > 0) {
 } elsif ($descendantcount > 0) {
 	print STDERR "% DEBUG: Going to make a 'child' subgraph\n" if $DEBUG;
 	
-	&startnode($depth++, "child");
+	&startnode($depth++, "child", &familyOptions($proband->fams));
 	&DEBUG($depth, "Proband", $proband);
 	&printIndividual("g", $proband, $depth);
 	&printDescendants($proband, $depth--, $descendantcount);
@@ -187,7 +187,10 @@ sub processEvent() {
 		$modifier = "+";
 	}
 	
-	return "".("\t"x$indent).$tag.$modifier." = {".&processDate($event->date)."}".(defined $event->place ? "{".&processPlace($event->place)."}" : "").(defined $modifierString ? "{$modifierString}" : "").($indent > 0 ? ",\n" : "");
+	return "".("\t"x$indent).$tag.$modifier." = {".&processDate($event->date)."}"
+		.(defined $event->place ? "{".&processPlace($event->place)."}" : (defined $modifierString ? "{}" : ""))
+		.(defined $modifierString ? "{$modifierString}" : "")
+		.($indent > 0 ? ",\n" : "");
 }
 
 sub processName() {
@@ -336,7 +339,7 @@ sub printDescendants() {
 		}
 		foreach my $child ($fam->children) {
 			&DEBUG($indent+$is_subsequent, "Child", $child);
-			&recurse($child, $indent+$is_subsequent, $depth, "child", \&printDescendants);
+			&recurse($child, $indent+$is_subsequent, $depth, "child", \&printDescendants, &familyOptions($child->fams));
 		}
 		&endnode($indent) if ($is_subsequent);
 		

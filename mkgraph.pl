@@ -16,6 +16,7 @@ my $gedfile;
 my $xref;
 my $ancestorcount = 0;
 my $descendantcount = 0;
+my $marriageoption = "family";
 my @ignore = [];
 
 sub usage() {
@@ -26,10 +27,12 @@ Usage: $0 -f <path to gedcom> -x <xref> [options]
 	-x / --xref        : xref for an individual in the file
 	-a / --ancestors   : number of ancestor generations to graph
 	-d / --descendants : number of descendant generations to graph
+	-m / --marriage    : where to put marriage info. one of [family, proband, spouse],
+	                   : 'family' is default.
 	-i / --ignore      : ignore these xrefs (individuals & families)
 	--debug            : output debugging info on STDERR
 	-h / --help        : display this message
-
+	
 Graph will be printed to STDOUT.
 
 Note: Either ancestors or descendants (or both) must be specified.
@@ -42,6 +45,7 @@ GetOptions(
 	"x|xref=s" => \$xref,
 	"a|ancestors:i" => \$ancestorcount,
 	"d|descendants:i" => \$descendantcount,
+	"m|marriage:s" => \$marriageoption,
 	"i|ignore:s" => \@ignore,
 	"debug" => \$DEBUG,
 	"h|help" => sub { &usage() })
@@ -49,6 +53,7 @@ or &usage();
 
 if (!defined $gedfile) { &usage(); }
 if (!defined $xref) { &usage(); }
+if (!grep {$_ eq $marriageoption} qw/family proband spouse/) { &usage(); }
 
 @ignore = split(/,/,join(',',@ignore));
 
@@ -72,7 +77,7 @@ if ($ancestorcount > 0) {
 	if ($descendantcount > 0) {
 		print STDERR "% DEBUG: Going to make a 'sandclock' subgraph\n" if $DEBUG;
 		
-		&startnode($depth++, "sandclock", &familyOptions($proband->famc));
+		&startnode($depth++, "sandclock", ($marriageoption eq "family" ?  &familyOptions($proband->famc) : undef));
 		&printAncestors($proband, $depth--, $ancestorcount);
 		&startnode($depth++, "child");
 		&DEBUG($depth, "Proband", $proband);
@@ -83,7 +88,7 @@ if ($ancestorcount > 0) {
 	} else {
 		print STDERR "% DEBUG: Going to make a 'parent' subgraph\n" if $DEBUG;
 		
-		&startnode($depth++, "parent", &familyOptions($proband->famc));
+		&startnode($depth++, "parent", ($marriageoption eq "family" ?  &familyOptions($proband->famc) : undef));
 		&DEBUG($depth, "Proband", $proband);
 		&printIndividual("g", $proband, $depth);
 		&printAncestors($proband, $depth--, $ancestorcount);
@@ -92,7 +97,7 @@ if ($ancestorcount > 0) {
 } elsif ($descendantcount > 0) {
 	print STDERR "% DEBUG: Going to make a 'child' subgraph\n" if $DEBUG;
 	
-	&startnode($depth++, "child", &familyOptions($proband->fams));
+	&startnode($depth++, "child", ($marriageoption eq "family" ?  &familyOptions($proband->fams) : undef));
 	&DEBUG($depth, "Proband", $proband);
 	&printIndividual("g", $proband, $depth);
 	&printDescendants($proband, $depth--, $descendantcount);
@@ -217,6 +222,7 @@ sub printIndividual() {
 	my $nodetype = shift;
 	my $indi = shift;
 	my $indent = shift;
+	my $is_spouse = shift;
 	
 	&startnode($indent++, $nodetype, "id=".$indi->xref);
 	if (my $sex = $indi->record('sex')) {
@@ -256,6 +262,11 @@ sub printIndividual() {
 	if (my $occupation = $indi->occupation) {
 		$occupation =~ s/\&/\\\&/;
 		print "".("\t"x($indent))."profession = {".join(", ", $occupation)."},\n";
+	}
+	if (($marriageoption eq "proband" && not $is_spouse) || ($marriageoption eq "spouse" && $is_spouse)) {
+		if (defined $indi->fams && (my $marr = $indi->fams->record('marriage'))) {
+			print &processEvent("marriage", $marr, $indent);
+		}
 	}
 	&endnode(--$indent);
 }
@@ -310,13 +321,13 @@ sub printAncestors() {
 	my $father = $family->husband;
 	if (defined $father) {
 		&DEBUG($indent, "Father", $father);
-		&recurse($father, $indent, $depth, "parent", \&printAncestors, &familyOptions($father->famc));
+		&recurse($father, $indent, $depth, "parent", \&printAncestors, ($marriageoption eq "family" ?  &familyOptions($father->famc) : undef));
 	}
 	
 	my $mother = $family->wife;
 	if (defined $mother) {
 		&DEBUG($indent, "Mother", $mother);
-		&recurse($mother, $indent, $depth, "parent", \&printAncestors, &familyOptions($mother->famc));
+		&recurse($mother, $indent, $depth, "parent", \&printAncestors, ($marriageoption eq "family" ?  &familyOptions($mother->famc) : undef));
 	}
 }
 
@@ -332,14 +343,14 @@ sub printDescendants() {
 		
 		my $spouse = $indi->sex eq "M" ? $fam->wife : $fam->husband;
 		
-		&startnode($indent, "union", &familyOptions($fam)) if ($is_subsequent);
+		&startnode($indent, "union", ($marriageoption eq "family" ?  &familyOptions($fam) : undef)) if ($is_subsequent);
 		if (defined $spouse) {
 			&DEBUG($indent+$is_subsequent, "Spouse", $spouse);
-			&printIndividual("p", $spouse, $indent+$is_subsequent);
+			&printIndividual("p", $spouse, $indent+$is_subsequent, 1);
 		}
 		foreach my $child ($fam->children) {
 			&DEBUG($indent+$is_subsequent, "Child", $child);
-			&recurse($child, $indent+$is_subsequent, $depth, "child", \&printDescendants, &familyOptions($child->fams));
+			&recurse($child, $indent+$is_subsequent, $depth, "child", \&printDescendants, ($marriageoption eq "family" ?  &familyOptions($child->fams) : undef));
 		}
 		&endnode($indent) if ($is_subsequent);
 		

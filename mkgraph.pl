@@ -225,8 +225,8 @@ sub printIndividual() {
 	my $is_spouse = shift;
 	
 	&startnode($indent++, $nodetype, "id=".$indi->xref);
-	if (my $sex = $indi->record('sex')) {
-		print "".("\t"x($indent)).($sex eq "M" ? "male" : "female").",\n";
+	if (my $sex = $indi->sex) {
+		print "".("\t"x($indent)).($sex =~ m/^M(?:ale)?$/i ? "male" : "female").",\n";
 	}
 	if (my $name = $indi->record('name')) {
 		print "".("\t"x($indent))."name = {".&processName($indi)."},\n";

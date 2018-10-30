@@ -216,13 +216,13 @@ sub printIndividual() {
 	my $indent = shift;
 	
 	&startnode($indent++, $nodetype, "id=".$indi->xref);
-	if (defined $indi->sex) {
-		print "".("\t"x($indent)).($indi->sex eq "M" ? "male" : "female").",\n";
+	if (my $sex = $indi->record('sex')) {
+		print "".("\t"x($indent)).($sex eq "M" ? "male" : "female").",\n";
 	}
-	if (defined $indi->name) {
+	if (my $name = $indi->record('name')) {
 		print "".("\t"x($indent))."name = {".&processName($indi)."},\n";
 	}
-	if (defined $indi->birth) {
+	if (my $birth = $indi->record('birth')) {
 		my $fam = $indi->famc;
 		my $modifier;
 		if (defined $fam) {
@@ -232,25 +232,25 @@ sub printIndividual() {
 				$modifier = "out of wedlock";
 			}
 		}
-		print &processEvent("birth", $indi->birth, $indent, $modifier);
+		#TODO stillborn if birth date = death date
+		print &processEvent("birth", $birth, $indent, $modifier);
 	}
-	if (defined $indi->baptism) {
-		print &processEvent("baptism", $indi->baptism, $indent);
-	} elsif (defined $indi->christening) {
-		print &processEvent("baptism", $indi->christening, $indent);
+	if (my $baptism = $indi->record('baptism')) {
+		print &processEvent("baptism", $baptism, $indent);
+	} elsif (my $christening = $indi->record('christening')) {
+		print &processEvent("baptism", $christening, $indent);
 	}
 	#TODO floruit?
-	if (defined $indi->death) {
-		print &processEvent("death", $indi->death, $indent);
+	if (my $death = $indi->record('death')) {
+		print &processEvent("death", $death, $indent);
 	}
-	if (defined $indi->burial) {
-		print &processEvent("burial", $indi->burial, $indent);
+	if (my $burial = $indi->record('burial')) {
+		print &processEvent("burial", $burial, $indent);
 	}
-	if (defined $indi->cremation) {
-		print &processEvent("cremation", $indi->cremation, $indent);
+	if (my $cremation = $indi->record('cremation')) {
+		print &processEvent("cremation", $cremation, $indent);
 	}
-	if (defined $indi->occupation) {
-		my $occupation = $indi->occupation;
+	if (my $occupation = $indi->occupation) {
 		$occupation =~ s/\&/\\\&/;
 		print "".("\t"x($indent))."profession = {".join(", ", $occupation)."},\n";
 	}

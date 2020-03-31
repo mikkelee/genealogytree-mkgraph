@@ -16,6 +16,7 @@ my $gedfile;
 my $xref;
 my $ancestorcount = 0;
 my $descendantcount = 0;
+my $includefloruit = 0;
 my $marriageoption = "family";
 my @ignore = [];
 
@@ -30,6 +31,7 @@ Usage: $0 -f <path to gedcom> -x <xref> [options]
 	-m / --marriage    : where to put marriage info. one of [family, proband, spouse],
 	                   : 'family' is default.
 	-i / --ignore      : ignore these xrefs (individuals & families)
+	--floruit          : calculate floruit information from all individual events
 	--debug            : output debugging info on STDERR
 	-h / --help        : display this message
 	
@@ -47,6 +49,7 @@ GetOptions(
 	"d|descendants:i" => \$descendantcount,
 	"m|marriage:s" => \$marriageoption,
 	"i|ignore:s" => \@ignore,
+	"floruit" => \$includefloruit,
 	"debug" => \$DEBUG,
 	"h|help" => sub { &usage() })
 or &usage();
@@ -271,18 +274,20 @@ sub printIndividual() {
 			print &processEvent("marriage", $marr, $indent);
 		}
 	}
-	my $first = 9999;
-	my $last = 0000;
-	foreach my $event ($indi->items) {
-		if (my $date = $event->date && $event->tag ne "CHAN") {
-			$event->date =~ m/(\d{4})/; # TODO handle ranges/periods
-			my $year = $1;
-			print STDERR "".("\t"x($indent))."% DEBUG: floruit ".$event->tag." year: $year\n" if $DEBUG;
-			if ($year < $first) { $first = $year };
-			if ($year > $last) { $last = $year };
+	if ($includefloruit) {
+		my $first = 9999;
+		my $last = 0000;
+		foreach my $event ($indi->items) {
+			if (my $date = $event->date && $event->tag ne "CHAN") { # TODO include marriage events + child birth years?
+				$event->date =~ m/(\d{4})/; # TODO handle ranges/periods
+				my $year = $1;
+				print STDERR "".("\t"x($indent))."% DEBUG: floruit ".$event->tag." year: $year\n" if $DEBUG;
+				if ($year < $first) { $first = $year };
+				if ($year > $last) { $last = $year };
+			}
 		}
+		print "".("\t"x($indent))."floruit- = {$first/$last},\n";
 	}
-	print "".("\t"x($indent))."floruit- = {$first/$last},\n";
 	&endnode(--$indent);
 }
 

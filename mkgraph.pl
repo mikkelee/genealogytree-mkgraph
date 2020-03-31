@@ -249,7 +249,6 @@ sub printIndividual() {
 	} elsif (my $christening = $indi->record('christening')) {
 		print &processEvent("baptism", $christening, $indent);
 	}
-	#TODO floruit?
 	if (my $death = $indi->record('death')) {
 		print &processEvent("death", $death, $indent);
 	}
@@ -268,6 +267,18 @@ sub printIndividual() {
 			print &processEvent("marriage", $marr, $indent);
 		}
 	}
+	my $first = 9999;
+	my $last = 0000;
+	foreach my $event ($indi->items) {
+		if (my $date = $event->date && $event->tag ne "CHAN") {
+			$event->date =~ m/(\d{4})/; # TODO handle ranges/periods
+			my $year = $1;
+			print STDERR "".("\t"x($indent))."% DEBUG: floruit ".$event->tag." year: $year\n" if $DEBUG;
+			if ($year < $first) { $first = $year };
+			if ($year > $last) { $last = $year };
+		}
+	}
+	print "".("\t"x($indent))."floruit- = {$first/$last},\n";
 	&endnode(--$indent);
 }
 

@@ -241,7 +241,11 @@ sub printIndividual() {
 				$modifier = "out of wedlock";
 			}
 		}
-		#TODO stillborn if birth date = death date
+		if (my $death = $indi->record('death')) {
+			if ($death->age && $death->age eq "STILLBORN" || $death->date eq $birth->date)  {
+				$modifier = 'stillborn';
+			}
+		}
 		print &processEvent("birth", $birth, $indent, $modifier);
 	}
 	if (my $baptism = $indi->record('baptism')) {

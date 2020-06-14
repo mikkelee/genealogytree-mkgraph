@@ -1,6 +1,6 @@
 # Readme #
 
-A simple script for generating graphs to use with the LaTeX package [genealogytree](https://github.com/T-F-S/genealogytree). Requires the perl modules `Genealogy::Gedcom::Date` and `Gedcom` (both available via CPAN).
+A simple script for generating graphs for use with the LaTeX package [genealogytree](https://github.com/T-F-S/genealogytree). Requires the perl modules `Genealogy::Gedcom::Date`, `Gedcom`, and `List::MoreUtils` (available via CPAN).
 
 Generated graphs will likely need some manual cleanup for optimal display.
 

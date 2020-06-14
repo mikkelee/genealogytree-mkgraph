@@ -4,10 +4,10 @@ use warnings;
 use diagnostics;
 use strict;
 
+use Getopt::Long qw(:config no_auto_abbrev);
+
 use Gedcom;
 use Genealogy::Gedcom::Date;
-
-use Getopt::Long qw(:config no_auto_abbrev);
 use List::MoreUtils qw(firstidx);
 
 my $DEBUG = 0;

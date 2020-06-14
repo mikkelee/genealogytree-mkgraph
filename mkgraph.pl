@@ -245,7 +245,7 @@ sub printIndividual() {
 			}
 		}
 		if (my $death = $indi->record('death')) {
-			if ($death->age && $death->age eq "STILLBORN" || $death->date eq $birth->date)  {
+			if ($death->age && ($death->age eq "STILLBORN" || $death->date eq $birth->date))  {
 				$modifier = 'stillborn';
 			}
 		}

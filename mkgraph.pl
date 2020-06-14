@@ -81,12 +81,12 @@ if ($ancestorcount > 0) {
 		print STDERR "% DEBUG: Going to make a 'sandclock' subgraph\n" if $DEBUG;
 		
 		&startnode($depth++, "sandclock", &familyOptions($proband->famc));
-		&printAncestors($proband, $depth--, $ancestorcount);
+		&printAncestors($proband, $depth, $ancestorcount);
 		&startnode($depth++, "child", &familyOptions($proband->fams));
 		&DEBUG($depth, "Proband", $proband);
 		&printIndividual("g", $proband, $depth);
 		&printDescendants($proband, $depth--, $descendantcount);
-		&endnode($depth);
+		&endnode($depth--);
 		&endnode($depth);
 	} else {
 		print STDERR "% DEBUG: Going to make a 'parent' subgraph\n" if $DEBUG;

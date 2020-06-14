@@ -229,7 +229,13 @@ sub printIndividual() {
 	
 	&startnode($indent++, $nodetype, "id=".$indi->xref);
 	if (my $sex = $indi->sex) {
-		print "".("\t"x($indent)).($sex =~ m/^M(?:ale)?$/i ? "male" : "female").",\n";
+		my $gender = "neuter";
+		if ($sex =~ m/^M(?:ale)?$/i) {
+			$gender = "male";
+		} elsif ($sex =~ m/^F(?:emale)?$/i) {
+			$gender = "female";
+		}
+		print "".("\t"x($indent)).($gender).",\n";
 	}
 	if (my $name = $indi->record('name')) {
 		print "".("\t"x($indent))."name = {".&processName($indi)."},\n";
